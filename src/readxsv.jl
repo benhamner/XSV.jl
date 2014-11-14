@@ -1,3 +1,3 @@
-function readxsv(data)
-    return [split(x, ",") for x=split(data, "\n")]
+function readxsv(data; delimiter=",")
+    return [split(x, delimiter) for x=split(data, "\n")]
 end
