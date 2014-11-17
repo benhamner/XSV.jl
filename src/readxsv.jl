@@ -16,7 +16,7 @@ baremodule FieldState
     in_double_quoted_field = 4
 end
 
-function readxsv(io::IO, delimiter::Char, quotechar::Char)
+function readxsv(io::IO; delimiter=','::Char, quotechar='"'::Char)
     state = FieldState.not_in_field
     delimiter_n = uint8(delimiter)
     quotechar_n = uint8(quotechar)
@@ -112,13 +112,11 @@ function readxsv(io::IO, delimiter::Char, quotechar::Char)
     end
     rows
 end
+readxsv(data::String; delimiter=',', quotechar='"') = readxsv(IOBuffer(data), delimiter=delimiter, quotechar=quotechar)
 
-function readxsvs(data::String; delimiter=',', quotechar='"')
-	readxsv(IOBuffer(data), delimiter, quotechar)
+function freadxsv(xsv_file::String; delimiter=',', quotechar='"')
+	io = open(xsv_file)
+	xsv = readxsv(io, delimiter=delimiter, quotechar=quotechar)
+	close(io)
+	xsv
 end
-
-function readxsv(data::String; delimiter=",")
-    return [split(x, delimiter) for x=split(data, "\n")]
-end
-
-
