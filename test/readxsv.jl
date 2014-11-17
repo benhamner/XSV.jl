@@ -27,3 +27,4 @@ data = freadxsv(joinpath(cases_path, "cases/1.csv"))
 @test data[4][2]=="penguin"
 @test data[4][3]=="12"
 @test length(data)==4
+
