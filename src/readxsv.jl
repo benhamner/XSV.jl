@@ -83,6 +83,10 @@ function readxsv(io::IO, delimiter::Char, quotechar::Char)
                 field[n_field] = c
                 state = FieldState.in_quoted_field        
             elseif c==r_newline_n || c==n_newline_n
+                resize!(field, n_field)
+                push!(row, ASCIIString(field))
+                field = Array(Uint8, 1024)
+                n_field = 0
                 push!(rows, row)
                 row = Array(ASCIIString, 0)
                 state = FieldState.not_in_field

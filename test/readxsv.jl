@@ -14,3 +14,6 @@ using XSV
 
 @test readxsvs("1;2;3\n4;5;6", delimiter=';')[1][3]=="3"
 @test readxsvs("1;2;3\n4;5;6", delimiter=';')[2][2]=="5"
+
+@test readxsvs("\"1\";2;\"3\"\n4;5;6", delimiter=';')[1][3]=="3"
+@test readxsvs("1;2;3\n\"4\";\"5\";\"6\"", delimiter=';')[2][2]=="5"
