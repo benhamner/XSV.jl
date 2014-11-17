@@ -6,7 +6,8 @@ module XSV
         # types
 
         # methods
-        readxsv
+        readxsv,
+        readxsvs
 
     include("readxsv.jl")
 end
