@@ -28,3 +28,8 @@ data = freadxsv(joinpath(cases_path, "cases/1.csv"))
 @test data[4][3]=="12"
 @test length(data)==4
 
+xsv_stream = fiterxsv(joinpath(cases_path, "cases/1.csv"))
+@test consume(xsv_stream)[1]=="id"
+@test consume(xsv_stream)[2]=="dog"
+@test consume(xsv_stream)[3]=="11"
+@test consume(xsv_stream)[2]=="penguin"

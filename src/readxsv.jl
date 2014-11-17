@@ -25,7 +25,7 @@ function get_string_type(strtype::String)
 	throw(@sprintf("Invalid String Type %s", strtype))
 end
 
-function _iterxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii")
+function _iterxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii", close_io=false::Bool)
     stringType = get_string_type(strtype)
     state = FieldState.not_in_field
     delimiter_n = uint8(delimiter)
@@ -119,23 +119,22 @@ function _iterxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="asc
     if length(row)>0
     	produce(row)
     end
+    if close_io
+    	close(io)
+    end
 end
 
-iterxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String) = @task _iterxsv(io, delimiter=delimiter, quotechar=quotechar, strtype=strtype)
+iterxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String, close_io=false::Bool) = @task _iterxsv(io, delimiter=delimiter, quotechar=quotechar, strtype=strtype, close_io=close_io)
 iterxsv(data::String; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String) = iterxsv(IOBuffer(data), delimiter=delimiter, quotechar=quotechar, strtype=strtype)
-function readxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String)
+function readxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String, close_io=false::Bool)
 	stringType = get_string_type(strtype)
 	rows = Array(Vector{stringType}, 0)
-	for row in iterxsv(io, delimiter=delimiter, quotechar=quotechar, strtype=strtype)
+	for row in iterxsv(io, delimiter=delimiter, quotechar=quotechar, strtype=strtype, close_io=close_io)
 		push!(rows, row)
 	end
 	rows
 end
 readxsv(data::String; delimiter=',', quotechar='"', strtype="ascii"::String) = readxsv(IOBuffer(data), delimiter=delimiter, quotechar=quotechar, strtype=strtype)
 
-function freadxsv(xsv_file::String; delimiter=',', quotechar='"', strtype="ascii"::String)
-	io = open(xsv_file)
-	xsv = readxsv(io, delimiter=delimiter, quotechar=quotechar, strtype=strtype)
-	close(io)
-	xsv
-end
+fiterxsv(xsv_file::String; delimiter=',', quotechar='"', strtype="ascii"::String) = @task _iterxsv(open(xsv_file), delimiter=delimiter, quotechar=quotechar, strtype=strtype, close_io=true)
+freadxsv(xsv_file::String; delimiter=',', quotechar='"', strtype="ascii"::String) = xsv = readxsv(open(xsv_file), delimiter=delimiter, quotechar=quotechar, strtype=strtype, close_io=true)
