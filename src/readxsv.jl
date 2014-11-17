@@ -16,13 +16,12 @@ baremodule FieldState
     in_double_quoted_field = 4
 end
 
-function readxsv(io::IO; delimiter=','::Char, quotechar='"'::Char)
+function _iterxsv(io::IO; delimiter=','::Char, quotechar='"'::Char)
     state = FieldState.not_in_field
     delimiter_n = uint8(delimiter)
     quotechar_n = uint8(quotechar)
     r_newline_n = 0x0d
     n_newline_n = 0x0a
-    rows    = Array(Vector{ASCIIString}, 0)
     row     = Array(ASCIIString, 0)
     field   = Array(Uint8, 1024)
     n_field = 0
@@ -56,7 +55,7 @@ function readxsv(io::IO; delimiter=','::Char, quotechar='"'::Char)
             if c==r_newline_n || c==n_newline_n
             	resize!(field, n_field)
                 push!(row, ASCIIString(field))
-                push!(rows, row)
+                produce(row)
                 field = Array(Uint8, 1024)
                 n_field = 0
                 row = Array(ASCIIString, 0)
@@ -87,7 +86,7 @@ function readxsv(io::IO; delimiter=','::Char, quotechar='"'::Char)
                 push!(row, ASCIIString(field))
                 field = Array(Uint8, 1024)
                 n_field = 0
-                push!(rows, row)
+                produce(row)
                 row = Array(ASCIIString, 0)
                 state = FieldState.not_in_field
             elseif c==delimiter_n
@@ -108,9 +107,18 @@ function readxsv(io::IO; delimiter=','::Char, quotechar='"'::Char)
         push!(row, ASCIIString(field))
     end
     if length(row)>0
-    	push!(rows, row)
+    	produce(row)
     end
-    rows
+end
+
+iterxsv(io::IO; delimiter=','::Char, quotechar='"'::Char) = @task _iterxsv(io, delimiter=delimiter, quotechar=quotechar)
+iterxsv(data::String; delimiter=',', quotechar='"') = iterxsv(IOBuffer(data), delimiter=delimiter, quotechar=quotechar)
+function readxsv(io::IO; delimiter=','::Char, quotechar='"'::Char)
+	rows = Array(Vector{ASCIIString}, 0)
+	for row in iterxsv(io, delimiter=delimiter, quotechar=quotechar)
+		push!(rows, row)
+	end
+	rows
 end
 readxsv(data::String; delimiter=',', quotechar='"') = readxsv(IOBuffer(data), delimiter=delimiter, quotechar=quotechar)
 
