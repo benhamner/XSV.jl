@@ -6,14 +6,27 @@ XSV.jl
 
 Simple tool for reading syntactically correct (RFC 4180) CSV files in a streaming manner. Works with different delimiters, quote characters, and unicode.
 
-Working in a streaming manner (string as a d):
+Working in a streaming manner:
 
-     > using XSV
-     > for row=iterxsv("cat,1\ndog,2")
-     >    println(row)
-     > end
-     ASCIIString["cat","1"]
-     ASCIIString["dog","2"]
+    > using XSV
+    > for row=iterxsv("cat,1\ndog,2")
+    >     println(row)
+    > end
+    ASCIIString["cat","1"]
+    ASCIIString["dog","2"]
+
+`fiterxsv` takes in a filepath:
+
+    > io = open("a.tsv", "w")
+    > write(io, "animal\ttype\n😸\t*mammal*\n*penguin*\t*bird*")
+    > close(io)
+    > 
+    > for row=fiterxsv("a.tsv", delimiter='\t', quotechar='*', strtype="utf8")
+    >     println(row)
+    > end
+    UTF8String["animal","type"]
+    UTF8String["😸","mammal"]
+    UTF8String["penguin","bird"]
 
 Reading everything in at once:
 
@@ -25,7 +38,6 @@ Reading everything in at once:
 TODO
 ====
 
- - Additional file helpers
  - Header support
  - Speed benchmarks
  - Documentation
