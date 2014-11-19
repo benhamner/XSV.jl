@@ -33,3 +33,8 @@ xsv_stream = fiterxsv(joinpath(cases_path, "cases/1.csv"))
 @test consume(xsv_stream)[2]=="dog"
 @test consume(xsv_stream)[3]=="11"
 @test consume(xsv_stream)[2]=="penguin"
+
+xsv_stream = fiterxsvh(joinpath(cases_path, "cases/1.csv"))
+@test consume(xsv_stream)["type"]=="dog"
+@test consume(xsv_stream)["count"]=="11"
+@test consume(xsv_stream)["type"]=="penguin"

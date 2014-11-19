@@ -7,7 +7,9 @@ module XSV
 
         # methods
         iterxsv,
+        iterxsvh,
         fiterxsv,
+        fiterxsvh,
         freadxsv,
         readxsv
 
