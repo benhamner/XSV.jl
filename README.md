@@ -3,6 +3,7 @@ XSV.jl
 
 [![Build Status](https://travis-ci.org/benhamner/XSV.jl.svg?branch=master)](https://travis-ci.org/benhamner/XSV.jl)
 [![Coverage Status](https://coveralls.io/repos/benhamner/XSV.jl/badge.png?branch=master)](https://coveralls.io/r/benhamner/XSV.jl?branch=master)
+[![Package Evaluator](http://iainnz.github.io/packages.julialang.org/badges/XSV_release.svg)](http://iainnz.github.io/packages.julialang.org/?pkg=XSV&ver=release)
 
 Simple tool for reading syntactically correct (RFC 4180) CSV files in a streaming manner. Works with different delimiters, quote characters, and unicode.
 
