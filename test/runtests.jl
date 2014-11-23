@@ -1,6 +1,7 @@
 using Base.Test
 
 tests = [
+	"genxsv",
     "readxsv"]
 
 println("Running tests:")

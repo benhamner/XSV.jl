@@ -11,7 +11,9 @@ module XSV
         fiterxsv,
         fiterxsvh,
         freadxsv,
+        genxsv,
         readxsv
 
+    include("genxsv.jl")
     include("readxsv.jl")
 end
