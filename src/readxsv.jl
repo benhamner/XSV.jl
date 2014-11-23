@@ -26,13 +26,13 @@ function get_string_type(strtype::String)
 end
 
 function _iterxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii", close_io=false::Bool)
-    stringType = get_string_type(strtype)
+    string_type = get_string_type(strtype)
     state = FieldState.not_in_field
     delimiter_n = uint8(delimiter)
     quotechar_n = uint8(quotechar)
     r_newline_n = 0x0d
     n_newline_n = 0x0a
-    row     = Array(stringType, 0)
+    row     = Array(string_type, 0)
     field   = Array(Uint8, 1024)
     n_field = 0
 
@@ -64,15 +64,15 @@ function _iterxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="asc
         elseif state==FieldState.in_un_quoted_field
             if c==r_newline_n || c==n_newline_n
             	resize!(field, n_field)
-                push!(row, stringType(field))
+                push!(row, string_type(field))
                 produce(row)
                 field = Array(Uint8, 1024)
                 n_field = 0
-                row = Array(stringType, 0)
+                row = Array(string_type, 0)
                 state = FieldState.not_in_field
             elseif c==delimiter_n
                 resize!(field, n_field)
-                push!(row, stringType(field))
+                push!(row, string_type(field))
                 field = Array(Uint8, 1024)
                 n_field = 0
                 state = FieldState.not_in_field
@@ -93,15 +93,15 @@ function _iterxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="asc
                 state = FieldState.in_quoted_field        
             elseif c==r_newline_n || c==n_newline_n
                 resize!(field, n_field)
-                push!(row, stringType(field))
+                push!(row, string_type(field))
                 field = Array(Uint8, 1024)
                 n_field = 0
                 produce(row)
-                row = Array(stringType, 0)
+                row = Array(string_type, 0)
                 state = FieldState.not_in_field
             elseif c==delimiter_n
                 resize!(field, n_field)
-                push!(row, stringType(field))
+                push!(row, string_type(field))
                 field = Array(Uint8, 1024)
                 n_field = 0
                 state = FieldState.not_in_field
@@ -114,7 +114,7 @@ function _iterxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="asc
     end
     if n_field>0
         resize!(field, n_field)
-        push!(row, stringType(field))
+        push!(row, string_type(field))
     end
     if length(row)>0
     	produce(row)
@@ -124,20 +124,53 @@ function _iterxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="asc
     end
 end
 
+function clean_col_names(field_names::Array{ASCIIString,1})
+    cleaned_field_names = Array(ASCIIString, 0)
+    for field_name=field_names
+        cleaned_field_name = field_name
+        if "type"==field_name
+            cleaned_field_name = "type_0"
+        end
+        push!(cleaned_field_names, cleaned_field_name)
+    end
+    cleaned_field_names
+end
+
+abstract XsvRow
+function create_xsv_row_type(field_names::Array{ASCIIString,1}; strtype="ascii"::ASCIIString, type_name=""::ASCIIString)
+    field_names = clean_col_names(field_names)
+    string_type = get_string_type(strtype::String)
+    if type_name==""
+        num = 1
+        while isdefined(symbol("Xsv" * string(num) * "Row"))
+            num += 1
+        end
+        type_name = "Xsv" * string(num) * "Row"
+    end
+    type_string = "type $type_name <: XsvRow\n";
+
+    for field_name = field_names
+        type_string = type_string*"    $field_name::$string_type\n"
+    end
+    eval(parse(type_string*"end"))
+    eval(parse(type_name))
+end
+
 iterxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String, close_io=false::Bool) = @task _iterxsv(io, delimiter=delimiter, quotechar=quotechar, strtype=strtype, close_io=close_io)
 iterxsv(data::String; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String) = iterxsv(IOBuffer(data), delimiter=delimiter, quotechar=quotechar, strtype=strtype)
-function _iterxsvh(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String, close_io=false::Bool)
-     xsv_stream = iterxsv(io, delimiter=delimiter, quotechar=quotechar, strtype=strtype, close_io=close_io)
-     header = consume(xsv_stream)
-     for row in xsv_stream
-        produce([header[i]=>row[i] for i=1:length(header)])
-     end
+function _iterxsvh(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String, close_io=false::Bool) 
+    xsv_stream = iterxsv(io, delimiter=delimiter, quotechar=quotechar, strtype=strtype, close_io=close_io)
+    header = consume(xsv_stream)
+    xsv_row = create_xsv_row_type(header, strtype=strtype)
+    for row in xsv_stream
+       produce(xsv_row(row...))
+    end
 end
 iterxsvh(data::String; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String) = _iterxsvh(IOBuffer(data), delimiter=delimiter, quotechar=quotechar, strtype=strtype)
 
 function readxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String, close_io=false::Bool)
-	stringType = get_string_type(strtype)
-	rows = Array(Vector{stringType}, 0)
+	string_type = get_string_type(strtype)
+	rows = Array(Vector{string_type}, 0)
 	for row in iterxsv(io, delimiter=delimiter, quotechar=quotechar, strtype=strtype, close_io=close_io)
 		push!(rows, row)
 	end
