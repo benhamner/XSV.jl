@@ -133,7 +133,7 @@ function _iterxsvh(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="as
         produce([header[i]=>row[i] for i=1:length(header)])
      end
 end
-iterxsvh(data::String; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String) = _iterxsvh(IOBuffer(data), delimiter=delimiter, quotechar=quotechar, strtype=strtype)
+iterxsvh(data::String; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String) = @task _iterxsvh(IOBuffer(data), delimiter=delimiter, quotechar=quotechar, strtype=strtype)
 
 function readxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String, close_io=false::Bool)
 	stringType = get_string_type(strtype)
