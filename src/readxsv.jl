@@ -167,15 +167,15 @@ function _iterxsvh(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="as
      end
 end
 iterxsvh(data::String; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String) = @task _iterxsvh(IOBuffer(data), delimiter=delimiter, quotechar=quotechar, strtype=strtype)
-function _iterxsvht(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String, close_io=false::Bool) 
+function _iterxsvht(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String, close_io=false::Bool, row_type_name=""::ASCIIString) 
     xsv_stream = iterxsv(io, delimiter=delimiter, quotechar=quotechar, strtype=strtype, close_io=close_io)
     header = consume(xsv_stream)
-    xsv_row = create_xsv_row_type(header, strtype=strtype)
+    xsv_row = create_xsv_row_type(header, strtype=strtype, type_name=row_type_name)
     for row in xsv_stream
        produce(xsv_row(row...))
     end
 end
-iterxsvht(data::String; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String) = @task _iterxsvht(IOBuffer(data), delimiter=delimiter, quotechar=quotechar, strtype=strtype)
+iterxsvht(data::String; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String, row_type_name=""::ASCIIString) = @task _iterxsvht(IOBuffer(data), delimiter=delimiter, quotechar=quotechar, strtype=strtype, row_type_name=row_type_name)
 
 function readxsv(io::IO; delimiter=','::Char, quotechar='"'::Char, strtype="ascii"::String, close_io=false::Bool)
 	string_type = get_string_type(strtype)
